@@ -1,16 +1,12 @@
 using UnityEngine;
 
-public class LobbyDesk : MonoBehaviour
+public class LobbyDesk : MonoBehaviour, IInteractable
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public string InteractionPrompt { get; }
+    
+    public bool OnInteract(Interactor interactor)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        Debug.Log("Interacting with the lobby desk");
+        return true;
     }
 }
