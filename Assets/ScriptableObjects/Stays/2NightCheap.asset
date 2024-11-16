@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3171d43d91dc448c92bb8a6b2c242b64, type: 3}
+  m_Name: 2NightCheap
+  m_EditorClassIdentifier: 
+  GuestInfo: {fileID: 11400000, guid: cbbc0acd4bfca4a4f8e221ca6de3a5cc, type: 2}
+  Rate: 100
+  Nights: 2
+  TotalCost: 200
