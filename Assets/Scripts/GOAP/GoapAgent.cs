@@ -28,24 +28,25 @@ public class GoapAgent : MonoBehaviour
     private Vector3 _destination;
 
     private AgentGoal _lastGoal;
-    private AgentGoal _currentGoal;
-    private ActionPlan _actionPlan;
-    private AgentAction _currentAction;
+    public ActionPlan ActionPlan { get; private set; }
 
     public HashSet<AgentAction> Actions { get; private set; }
-    private Dictionary<string, AgentBelief> _beliefs;
-    private HashSet<AgentGoal> _goals;
+    private AgentAction _currentAction;
+
+    public Dictionary<string, AgentBelief> Beliefs { get; private set; }
+
+    public HashSet<AgentGoal> Goals { get; private set; }
+    public AgentGoal CurrentGoal { get; private set; }
 
     private IGoapPlanner _planner;
-
 
     private void Awake()
     {
         _navMeshAgent = GetComponent<NavMeshAgent>();
         _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.freezeRotation = true;
-        
         _planner = new GoapPlanner();
+        GameManager.Instance.AddAgent(this);
     }
 
     private void Start()
@@ -58,8 +59,8 @@ public class GoapAgent : MonoBehaviour
 
     private void SetupBeliefs()
     {
-        _beliefs = new Dictionary<string, AgentBelief>();
-        var beliefFactory = new BeliefFactory(this, _beliefs);
+        Beliefs = new Dictionary<string, AgentBelief>();
+        var beliefFactory = new BeliefFactory(this, Beliefs);
 
         beliefFactory.AddBelief("Nothing", () => false);
         beliefFactory.AddBelief("AgentIdle", () => !_navMeshAgent.hasPath);
@@ -69,13 +70,12 @@ public class GoapAgent : MonoBehaviour
         beliefFactory.AddBelief("AgentStaminaLow", () => Stamina < 10);
         beliefFactory.AddBelief("AgentIsRested", () => Stamina >= 50);
         beliefFactory.AddBelief("AgentIsCheckedIn", () => Inventory.Contains("RoomKey"));
-        
+
         beliefFactory.AddLocationBelief("AgentAtRestingLocation", 3f, restingLocation);
         beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 1f, lobbyDeskLocation);
-        
+
         beliefFactory.AddSensorBelief("PlayerInChaseRange", chaseSensor);
         beliefFactory.AddSensorBelief("PlayerInAttackRange", attackSensor);
-        
     }
 
     private void SetupActions()
@@ -84,52 +84,52 @@ public class GoapAgent : MonoBehaviour
         {
             new AgentAction.Builder("Relax")
                 .WithStrategy(new IdleStrategy(5))
-                .AddEffect(_beliefs["Nothing"])
+                .AddEffect(Beliefs["Nothing"])
                 .Build(),
             new AgentAction.Builder("Wander Around")
                 .WithStrategy(new WanderStrategy(_navMeshAgent, 10))
-                .AddEffect(_beliefs["AgentMoving"])
+                .AddEffect(Beliefs["AgentMoving"])
                 .Build(),
             new AgentAction.Builder("MoveToRestingLocation")
                 .WithStrategy(new MoveStrategy(_navMeshAgent, () => restingLocation.position))
-                .AddEffect(_beliefs["AgentAtRestingLocation"])
+                .AddEffect(Beliefs["AgentAtRestingLocation"])
                 .Build(),
             new AgentAction.Builder("Rest")
                 .WithStrategy(new IdleStrategy(4))
-                .AddPrecondition(_beliefs["AgentAtRestingLocation"])
-                .AddEffect(_beliefs["AgentIsRested"])
+                .AddPrecondition(Beliefs["AgentAtRestingLocation"])
+                .AddEffect(Beliefs["AgentIsRested"])
                 .Build(),
             new AgentAction.Builder("MoveToLobbyDeskLocation")
                 .WithStrategy(new MoveStrategy(_navMeshAgent, () => lobbyDeskLocation.position))
-                .AddEffect(_beliefs["AgentAtLobbyDeskLocation"])
+                .AddEffect(Beliefs["AgentAtLobbyDeskLocation"])
                 .Build(),
             new AgentAction.Builder("CheckIn")
                 .WithStrategy(new IdleStrategy(10))
-                .AddPrecondition(_beliefs["AgentAtLobbyDeskLocation"])
-                .AddEffect(_beliefs["AgentIsCheckedIn"])
+                .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
+                .AddEffect(Beliefs["AgentIsCheckedIn"])
                 .Build(),
         };
     }
 
     private void SetupGoals()
     {
-        _goals = new HashSet<AgentGoal>
+        Goals = new HashSet<AgentGoal>
         {
             new AgentGoal.Builder("ChillOut")
                 .WithPriority(1)
-                .AddDesiredEffect(_beliefs["Nothing"])
+                .AddDesiredEffect(Beliefs["Nothing"])
                 .Build(),
             new AgentGoal.Builder("Wander")
                 .WithPriority(1)
-                .AddDesiredEffect(_beliefs["AgentMoving"])
+                .AddDesiredEffect(Beliefs["AgentMoving"])
                 .Build(),
             new AgentGoal.Builder("Rest")
                 .WithPriority(2)
-                .AddDesiredEffect(_beliefs["AgentIsRested"])
+                .AddDesiredEffect(Beliefs["AgentIsRested"])
                 .Build(),
             new AgentGoal.Builder("CheckIn")
                 .WithPriority(5)
-                .AddDesiredEffect(_beliefs["AgentIsCheckedIn"])
+                .AddDesiredEffect(Beliefs["AgentIsCheckedIn"])
                 .Build()
         };
     }
@@ -170,23 +170,23 @@ public class GoapAgent : MonoBehaviour
     private void HandleTargetChanged()
     {
         _currentAction = null;
-        _currentGoal = null;
+        CurrentGoal = null;
     }
 
     private void Update()
     {
         _statsTimer.Tick(Time.deltaTime);
-        
+
         if (_currentAction == null)
         {
             CalculatePlan();
-            
-            if (_actionPlan != null && _actionPlan.Actions.Count > 0)
+
+            if (ActionPlan != null && ActionPlan.Actions.Count > 0)
             {
                 _navMeshAgent.ResetPath();
-                
-                _currentGoal = _actionPlan.Goal;
-                _currentAction = _actionPlan.Actions.Pop();
+
+                CurrentGoal = ActionPlan.Goal;
+                _currentAction = ActionPlan.Actions.Pop();
 
                 if (_currentAction.Preconditions.All(precondition => precondition.Evaluate()))
                 {
@@ -195,41 +195,41 @@ public class GoapAgent : MonoBehaviour
                 else
                 {
                     _currentAction = null;
-                    _currentGoal = null;
+                    CurrentGoal = null;
                 }
             }
         }
 
-        if (_actionPlan == null || _currentAction == null) return;
-        
+        if (ActionPlan == null || _currentAction == null) return;
+
         _currentAction.Update(Time.deltaTime);
-            
+
         if (!_currentAction.Complete) return;
-            
+
         _currentAction.Stop();
         _currentAction = null;
 
-        if (_actionPlan.Actions.Count != 0) return;
-            
-        _lastGoal = _currentGoal;
-        _currentGoal = null;
+        if (ActionPlan.Actions.Count != 0) return;
+
+        _lastGoal = CurrentGoal;
+        CurrentGoal = null;
     }
 
     private void CalculatePlan()
     {
-        var priorityLevel = _currentGoal?.Priority ?? 0;
+        var priorityLevel = CurrentGoal?.Priority ?? 0;
 
-        var goalsToCheck = _goals;
+        var goalsToCheck = Goals;
 
         if (_currentAction != null)
         {
-            goalsToCheck = new HashSet<AgentGoal>(_goals.Where(goal => goal.Priority > priorityLevel));
+            goalsToCheck = new HashSet<AgentGoal>(Goals.Where(goal => goal.Priority > priorityLevel));
         }
-        
+
         var potentialPlan = _planner.Plan(this, goalsToCheck, _lastGoal);
 
         if (potentialPlan == null) return;
-        
-        _actionPlan = potentialPlan;
+
+        ActionPlan = potentialPlan;
     }
 }
