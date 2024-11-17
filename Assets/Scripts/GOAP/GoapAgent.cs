@@ -20,6 +20,7 @@ public class GoapAgent : MonoBehaviour
 
     [Header("Stats")] public float Health = 100f;
     public float Stamina = 100f;
+    public List<string> Inventory = new();
 
     private CountdownTimer _statsTimer;
 
@@ -67,9 +68,10 @@ public class GoapAgent : MonoBehaviour
         beliefFactory.AddBelief("AgentIsHealthy", () => Health >= 50);
         beliefFactory.AddBelief("AgentStaminaLow", () => Stamina < 10);
         beliefFactory.AddBelief("AgentIsRested", () => Stamina >= 50);
+        beliefFactory.AddBelief("AgentIsCheckedIn", () => Inventory.Contains("RoomKey"));
         
         beliefFactory.AddLocationBelief("AgentAtRestingLocation", 3f, restingLocation);
-        beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 3f, lobbyDeskLocation);
+        beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 1f, lobbyDeskLocation);
         
         beliefFactory.AddSensorBelief("PlayerInChaseRange", chaseSensor);
         beliefFactory.AddSensorBelief("PlayerInAttackRange", attackSensor);
@@ -96,7 +98,16 @@ public class GoapAgent : MonoBehaviour
                 .WithStrategy(new IdleStrategy(4))
                 .AddPrecondition(_beliefs["AgentAtRestingLocation"])
                 .AddEffect(_beliefs["AgentIsRested"])
-                .Build()
+                .Build(),
+            new AgentAction.Builder("MoveToLobbyDeskLocation")
+                .WithStrategy(new MoveStrategy(_navMeshAgent, () => lobbyDeskLocation.position))
+                .AddEffect(_beliefs["AgentAtLobbyDeskLocation"])
+                .Build(),
+            new AgentAction.Builder("CheckIn")
+                .WithStrategy(new IdleStrategy(10))
+                .AddPrecondition(_beliefs["AgentAtLobbyDeskLocation"])
+                .AddEffect(_beliefs["AgentIsCheckedIn"])
+                .Build(),
         };
     }
 
@@ -115,6 +126,10 @@ public class GoapAgent : MonoBehaviour
             new AgentGoal.Builder("Rest")
                 .WithPriority(2)
                 .AddDesiredEffect(_beliefs["AgentIsRested"])
+                .Build(),
+            new AgentGoal.Builder("CheckIn")
+                .WithPriority(5)
+                .AddDesiredEffect(_beliefs["AgentIsCheckedIn"])
                 .Build()
         };
     }
