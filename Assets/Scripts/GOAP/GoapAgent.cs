@@ -71,7 +71,6 @@ public class GoapAgent : MonoBehaviour
         beliefFactory.AddBelief("AgentIsRested", () => Stamina >= 50);
         beliefFactory.AddBelief("AgentInLobbyQueue", () => lobbyDeskLocation.gameObject.GetComponent<QueueableLine>().IsInQueue(gameObject));
         beliefFactory.AddBelief("AgentIsCheckedIn", () => Inventory.Contains("RoomKey"));
-        beliefFactory.AddBelief("AgentIsNotCheckedIn", () => !Inventory.Contains("RoomKey"));
 
         beliefFactory.AddLocationBelief("AgentAtRestingLocation", 3f, restingLocation);
         beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 3f, lobbyDeskLocation);
@@ -110,7 +109,7 @@ public class GoapAgent : MonoBehaviour
                 .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
                 .AddEffect(Beliefs["AgentInLobbyQueue"])
                 .Build(),
-            new AgentAction.Builder("CheckIn")
+            new AgentAction.Builder("WaitToBeCheckedIn")
                 .WithStrategy(new IdleStrategy(10))
                 .AddPrecondition(Beliefs["AgentInLobbyQueue"])
                 .AddEffect(Beliefs["AgentIsCheckedIn"])
@@ -136,9 +135,9 @@ public class GoapAgent : MonoBehaviour
                 .Build(),
             new AgentGoal.Builder("CheckedIn")
                 .WithPriority(5)
-                .AddDesiredEffect(Beliefs["AgentIsNotCheckedIn"])
                 .AddDesiredEffect(Beliefs["AgentInLobbyQueue"])
                 .AddDesiredEffect(Beliefs["AgentIsCheckedIn"])
+                .OneShot()
                 .Build()
         };
     }
@@ -221,6 +220,10 @@ public class GoapAgent : MonoBehaviour
         if (ActionPlan.Actions.Count != 0) return;
 
         _lastGoal = CurrentGoal;
+        if (CurrentGoal is { IsOneShot: true })
+        {
+            Goals.Remove(CurrentGoal);
+        }
         CurrentGoal = null;
     }
 

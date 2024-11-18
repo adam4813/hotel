@@ -25,7 +25,6 @@ public class AgentAction
             _strategy.Update(deltaTime);
         }
 
-
         if (!_strategy.Complete) return;
 
         foreach (var effect in Effects)

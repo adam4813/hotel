@@ -5,6 +5,7 @@ public class AgentGoal
     public string Name { get; }
     public float Priority { get; private set; }
     public HashSet<AgentBelief> DesiredEffects { get; } = new();
+    public bool IsOneShot { get; set; }
 
     private AgentGoal(string name)
     {
@@ -29,6 +30,12 @@ public class AgentGoal
         public Builder AddDesiredEffect(AgentBelief effect)
         {
             _goal.DesiredEffects.Add(effect);
+            return this;
+        }
+        
+        public Builder OneShot()
+        {
+            _goal.IsOneShot = true;
             return this;
         }
         
