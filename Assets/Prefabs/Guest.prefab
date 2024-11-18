@@ -68,6 +68,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   detectionRadius: 5
   timerInterval: 1
+  chaseSensor: 1
 --- !u!1 &4634974160513543236
 GameObject:
   m_ObjectHideFlags: 0
@@ -244,13 +245,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d74a19ca5ad84cd29b19b814d1998315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chaseSensor: {fileID: 9071840835032514353}
-  attackSensor: {fileID: 3785780964354861711}
-  restingLocation: {fileID: 0}
   doorLocation: {fileID: 0}
   lobbyDeskLocation: {fileID: 0}
+  dynamicLocations:
+  - Name: LobbyDeskLocation
+    Radius: 3
+    Location: {fileID: 0}
+  - Name: LobbyDesk2
+    Radius: 3
+    Location: {fileID: 0}
+  - Name: LobbyDesk3
+    Radius: 3
+    Location: {fileID: 0}
+  - Name: RestingLocation
+    Radius: 3
+    Location: {fileID: 0}
   Health: 100
   Stamina: 100
+  Inventory: []
 --- !u!1 &8416059318758282277
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,3 +331,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   detectionRadius: 1
   timerInterval: 1
+  chaseSensor: 0

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
@@ -6,14 +7,21 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class GoapAgent : MonoBehaviour
 {
-    [Header("Sensors")] [SerializeField] private GoapSensor chaseSensor;
-    [SerializeField] private GoapSensor attackSensor;
+    [Serializable]
+    private struct NamedLocation
+    {
+        public string Name;
+        public float Radius;
+        public Transform Location;
+    }
+
+    private readonly List<GoapSensor> _sensors = new();
 
     [Header("Known Locations")] [SerializeField]
-    private Transform restingLocation;
+    private Transform doorLocation;
 
-    [SerializeField] private Transform doorLocation;
     [SerializeField] private Transform lobbyDeskLocation;
+    [SerializeField] private List<NamedLocation> dynamicLocations;
 
     private NavMeshAgent _navMeshAgent;
     private Rigidbody _rigidbody;
@@ -30,10 +38,10 @@ public class GoapAgent : MonoBehaviour
     private AgentGoal _lastGoal;
     public ActionPlan ActionPlan { get; private set; }
 
-    public HashSet<AgentAction> Actions { get; private set; }
+    public HashSet<AgentAction> Actions { get; } = new();
     private AgentAction _currentAction;
 
-    public Dictionary<string, AgentBelief> Beliefs { get; private set; }
+    public Dictionary<string, AgentBelief> Beliefs { get; } = new();
 
     public HashSet<AgentGoal> Goals { get; private set; }
     public AgentGoal CurrentGoal { get; private set; }
@@ -51,15 +59,42 @@ public class GoapAgent : MonoBehaviour
 
     private void Start()
     {
+        SetupDynamicLocations();
+        SetupDynamicSensors();
         SetupTimers();
         SetupBeliefs();
         SetupActions();
         SetupGoals();
     }
 
+    private void SetupDynamicLocations()
+    {
+        foreach (var location in dynamicLocations)
+        {
+            var beliefName = $"AgentAt{location.Name}";
+            var beliefFactory = new BeliefFactory(this, Beliefs);
+            beliefFactory.AddLocationBelief(beliefName, location.Radius, location.Location);
+
+            Actions.Add(new AgentAction.Builder($"MoveTo{location.Name}")
+                .WithStrategy(new MoveStrategy(_navMeshAgent, () => location.Location.position))
+                .AddEffect(Beliefs[beliefName])
+                .Build());
+        }
+    }
+
+    private void SetupDynamicSensors()
+    {
+        foreach (var sensor in GetComponentsInChildren<GoapSensor>().ToList())
+        {
+            _sensors.Add(sensor);
+            var beliefName = $"ObjectIn{sensor.gameObject.name}Range";
+            var beliefFactory = new BeliefFactory(this, Beliefs);
+            beliefFactory.AddSensorBelief(beliefName, sensor);
+        }
+    }
+
     private void SetupBeliefs()
     {
-        Beliefs = new Dictionary<string, AgentBelief>();
         var beliefFactory = new BeliefFactory(this, Beliefs);
 
         beliefFactory.AddBelief("Nothing", () => false);
@@ -69,52 +104,38 @@ public class GoapAgent : MonoBehaviour
         beliefFactory.AddBelief("AgentIsHealthy", () => Health >= 50);
         beliefFactory.AddBelief("AgentStaminaLow", () => Stamina < 10);
         beliefFactory.AddBelief("AgentIsRested", () => Stamina >= 50);
-        beliefFactory.AddBelief("AgentInLobbyQueue", () => lobbyDeskLocation.gameObject.GetComponent<QueueableLine>().IsInQueue(gameObject));
+        beliefFactory.AddBelief("AgentInLobbyQueue",
+            () => lobbyDeskLocation.gameObject.GetComponent<QueueableLine>().IsInQueue(gameObject));
         beliefFactory.AddBelief("AgentIsCheckedIn", () => Inventory.Contains("RoomKey"));
-
-        beliefFactory.AddLocationBelief("AgentAtRestingLocation", 3f, restingLocation);
-        beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 3f, lobbyDeskLocation);
-
-        beliefFactory.AddSensorBelief("PlayerInChaseRange", chaseSensor);
-        beliefFactory.AddSensorBelief("PlayerInAttackRange", attackSensor);
     }
 
     private void SetupActions()
     {
-        Actions = new HashSet<AgentAction>
-        {
+        Actions.Add(
             new AgentAction.Builder("Relax")
                 .WithStrategy(new IdleStrategy(5))
                 .AddEffect(Beliefs["Nothing"])
-                .Build(),
-            new AgentAction.Builder("Wander Around")
-                .WithStrategy(new WanderStrategy(_navMeshAgent, 10))
-                .AddEffect(Beliefs["AgentMoving"])
-                .Build(),
-            new AgentAction.Builder("MoveToRestingLocation")
-                .WithStrategy(new MoveStrategy(_navMeshAgent, () => restingLocation.position))
-                .AddEffect(Beliefs["AgentAtRestingLocation"])
-                .Build(),
-            new AgentAction.Builder("Rest")
-                .WithStrategy(new IdleStrategy(4))
-                .AddPrecondition(Beliefs["AgentAtRestingLocation"])
-                .AddEffect(Beliefs["AgentIsRested"])
-                .Build(),
-            new AgentAction.Builder("MoveToLobbyDeskLocation")
-                .WithStrategy(new MoveStrategy(_navMeshAgent, () => lobbyDeskLocation.position))
-                .AddEffect(Beliefs["AgentAtLobbyDeskLocation"])
-                .Build(),
-            new AgentAction.Builder("QueueInLobbyLine")
-                .WithStrategy(new QueueInLineStrategy(lobbyDeskLocation.gameObject.GetComponent<QueueableLine>(), gameObject))
-                .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
-                .AddEffect(Beliefs["AgentInLobbyQueue"])
-                .Build(),
-            new AgentAction.Builder("WaitToBeCheckedIn")
-                .WithStrategy(new IdleStrategy(10))
-                .AddPrecondition(Beliefs["AgentInLobbyQueue"])
-                .AddEffect(Beliefs["AgentIsCheckedIn"])
-                .Build(),
-        };
+                .Build());
+        Actions.Add(new AgentAction.Builder("Wander Around")
+            .WithStrategy(new WanderStrategy(_navMeshAgent, 10))
+            .AddEffect(Beliefs["AgentMoving"])
+            .Build());
+        Actions.Add(new AgentAction.Builder("Rest")
+            .WithStrategy(new IdleStrategy(4))
+            .AddPrecondition(Beliefs["AgentAtRestingLocation"])
+            .AddEffect(Beliefs["AgentIsRested"])
+            .Build());
+        Actions.Add(new AgentAction.Builder("QueueInLobbyLine")
+            .WithStrategy(new QueueInLineStrategy(lobbyDeskLocation.gameObject.GetComponent<QueueableLine>(),
+                gameObject))
+            .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
+            .AddEffect(Beliefs["AgentInLobbyQueue"])
+            .Build());
+        Actions.Add(new AgentAction.Builder("WaitToBeCheckedIn")
+            .WithStrategy(new IdleStrategy(10))
+            .AddPrecondition(Beliefs["AgentInLobbyQueue"])
+            .AddEffect(Beliefs["AgentIsCheckedIn"])
+            .Build());
     }
 
     private void SetupGoals()
@@ -156,9 +177,9 @@ public class GoapAgent : MonoBehaviour
 
     private void UpdateStats()
     {
-        Stamina += InRangeOf(restingLocation.position, 3f) ? 20 : -10;
+        Stamina += Beliefs["AgentAtRestingLocation"].Evaluate() ? 20 : -10;
         Stamina = Mathf.Clamp(Stamina, 0, 100);
-        Health += InRangeOf(lobbyDeskLocation.position, 3f) ? 10 : -5;
+        Health += Beliefs["AgentAtLobbyDeskLocation"].Evaluate() ? 10 : -5;
         Health = Mathf.Clamp(Health, 0, 100);
     }
 
@@ -167,12 +188,24 @@ public class GoapAgent : MonoBehaviour
 
     private void OnEnable()
     {
-        chaseSensor.OnTargetChanged += HandleTargetChanged;
+        _sensors.ForEach(sensor =>
+        {
+            if (sensor.IsChaseSensor)
+            {
+                sensor.OnTargetChanged += HandleTargetChanged;
+            }
+        });
     }
 
     private void OnDisable()
     {
-        chaseSensor.OnTargetChanged -= HandleTargetChanged;
+        _sensors.ForEach(sensor =>
+        {
+            if (sensor.IsChaseSensor)
+            {
+                sensor.OnTargetChanged -= HandleTargetChanged;
+            }
+        });
     }
 
     private void HandleTargetChanged()
@@ -224,6 +257,7 @@ public class GoapAgent : MonoBehaviour
         {
             Goals.Remove(CurrentGoal);
         }
+
         CurrentGoal = null;
     }
 

@@ -6,13 +6,15 @@ public class GoapSensor : MonoBehaviour
 {
     [SerializeField] private float detectionRadius = 5f;
     [SerializeField] private float timerInterval = 1f;
-
+    [SerializeField] private bool chaseSensor;
+    
     private SphereCollider _collider;
 
     public event Action OnTargetChanged = delegate { };
 
     public Vector3 TargetPosition => _target != null ? _target.transform.position : Vector3.zero;
     public bool IsTargetInRange => TargetPosition != Vector3.zero;
+    public bool IsChaseSensor => chaseSensor;
 
     private GameObject _target;
     private Vector3 _lastPosition;
