@@ -69,10 +69,12 @@ public class GoapAgent : MonoBehaviour
         beliefFactory.AddBelief("AgentIsHealthy", () => Health >= 50);
         beliefFactory.AddBelief("AgentStaminaLow", () => Stamina < 10);
         beliefFactory.AddBelief("AgentIsRested", () => Stamina >= 50);
+        beliefFactory.AddBelief("AgentInLobbyQueue", () => lobbyDeskLocation.gameObject.GetComponent<QueueableLine>().IsInQueue(gameObject));
         beliefFactory.AddBelief("AgentIsCheckedIn", () => Inventory.Contains("RoomKey"));
+        beliefFactory.AddBelief("AgentIsNotCheckedIn", () => !Inventory.Contains("RoomKey"));
 
         beliefFactory.AddLocationBelief("AgentAtRestingLocation", 3f, restingLocation);
-        beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 1f, lobbyDeskLocation);
+        beliefFactory.AddLocationBelief("AgentAtLobbyDeskLocation", 3f, lobbyDeskLocation);
 
         beliefFactory.AddSensorBelief("PlayerInChaseRange", chaseSensor);
         beliefFactory.AddSensorBelief("PlayerInAttackRange", attackSensor);
@@ -103,9 +105,14 @@ public class GoapAgent : MonoBehaviour
                 .WithStrategy(new MoveStrategy(_navMeshAgent, () => lobbyDeskLocation.position))
                 .AddEffect(Beliefs["AgentAtLobbyDeskLocation"])
                 .Build(),
+            new AgentAction.Builder("QueueInLobbyLine")
+                .WithStrategy(new QueueInLineStrategy(lobbyDeskLocation.gameObject.GetComponent<QueueableLine>(), gameObject))
+                .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
+                .AddEffect(Beliefs["AgentInLobbyQueue"])
+                .Build(),
             new AgentAction.Builder("CheckIn")
                 .WithStrategy(new IdleStrategy(10))
-                .AddPrecondition(Beliefs["AgentAtLobbyDeskLocation"])
+                .AddPrecondition(Beliefs["AgentInLobbyQueue"])
                 .AddEffect(Beliefs["AgentIsCheckedIn"])
                 .Build(),
         };
@@ -127,8 +134,10 @@ public class GoapAgent : MonoBehaviour
                 .WithPriority(2)
                 .AddDesiredEffect(Beliefs["AgentIsRested"])
                 .Build(),
-            new AgentGoal.Builder("CheckIn")
+            new AgentGoal.Builder("CheckedIn")
                 .WithPriority(5)
+                .AddDesiredEffect(Beliefs["AgentIsNotCheckedIn"])
+                .AddDesiredEffect(Beliefs["AgentInLobbyQueue"])
                 .AddDesiredEffect(Beliefs["AgentIsCheckedIn"])
                 .Build()
         };
@@ -231,5 +240,10 @@ public class GoapAgent : MonoBehaviour
         if (potentialPlan == null) return;
 
         ActionPlan = potentialPlan;
+    }
+
+    public void AddItemToInventory(string itemName)
+    {
+        Inventory.Add(itemName);
     }
 }

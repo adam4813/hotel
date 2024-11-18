@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3620229276162480402}
   - component: {fileID: 5724664132153576731}
   - component: {fileID: 1973244796920471629}
+  - component: {fileID: 6006049883320348114}
   m_Layer: 7
   m_Name: LobbyDesk
   m_TagString: Untagged
@@ -68,6 +69,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.4074044, y: 0.74064827, z: 2.002237}
   m_Center: {x: 0.0041868687, y: 0.5732591, z: 0.7277993}
+--- !u!114 &6006049883320348114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398625260359208449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93b7c12aa69641298c066d23fea4f90d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxQueueSize: 2
 --- !u!1 &867935520099775799
 GameObject:
   m_ObjectHideFlags: 0
