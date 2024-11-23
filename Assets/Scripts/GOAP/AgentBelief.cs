@@ -15,29 +15,31 @@ public class BeliefFactory
 
     public void AddBelief(string key, Func<bool> condition)
     {
-        _beliefs.Add(key, new AgentBelief.Builder(key)
+        _beliefs[key] = new AgentBelief.Builder(key)
             .WithCondition(condition)
-            .Build());
+            .Build();
     }
 
     public void AddSensorBelief(string key, GoapSensor goapSensor)
     {
-        _beliefs.Add(key, new AgentBelief.Builder(key)
+        _beliefs[key] = new AgentBelief.Builder(key)
             .WithCondition(() => goapSensor.IsTargetInRange)
             .WithLocation(() => goapSensor.TargetPosition)
-            .Build());
-    }
-    
-    public void AddLocationBelief(string key, float distance, Transform locationCondition)
-    {
-        _beliefs.Add(key, new AgentBelief.Builder(key)
-            .WithCondition(() => InRangeOf(locationCondition.position, distance))
-            .WithLocation(() => locationCondition.position)
-            .Build());
+            .Build();
     }
 
-    private bool InRangeOf(Vector3 position, float distance) =>
-        Vector3.Distance(_agent.transform.position, position) < distance;
+    public void AddLocationBelief(string key, float distance, Transform locationCondition)
+    {
+        _beliefs[key] = new AgentBelief.Builder(key)
+            .WithCondition(() => InRangeOf(locationCondition.position, distance))
+            .WithLocation(() => locationCondition.position)
+            .Build();
+    }
+
+    private bool InRangeOf(Vector3 position, float distance)
+    {
+        return Vector3.Distance(_agent.transform.position, position) < distance;
+    }
 }
 
 public class AgentBelief

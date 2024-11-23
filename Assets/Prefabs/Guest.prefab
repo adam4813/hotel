@@ -245,21 +245,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d74a19ca5ad84cd29b19b814d1998315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  doorLocation: {fileID: 0}
-  lobbyDeskLocation: {fileID: 0}
   dynamicLocations:
-  - Name: LobbyDeskLocation
-    Radius: 3
-    Location: {fileID: 0}
-  - Name: LobbyDesk2
-    Radius: 3
-    Location: {fileID: 0}
-  - Name: LobbyDesk3
-    Radius: 3
-    Location: {fileID: 0}
-  - Name: RestingLocation
-    Radius: 3
-    Location: {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  dynamicItems:
+  - RoomKey
   Health: 100
   Stamina: 100
   Inventory: []

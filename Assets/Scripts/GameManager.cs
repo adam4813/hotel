@@ -7,10 +7,13 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     [SerializeField] private MouseDragPrefab mouseDragPrefab;
     [SerializeField] private GameObject roomPrefab;
+    [SerializeField] private List<ItemScriptableObject> items;
     public List<GoapAgent> Agents { get; } = new();
+    public List<ItemScriptableObject> Items => items;
 
     public MouseDragPrefab MouseDragPrefab => mouseDragPrefab;
     public GameObject ActivePrefab => roomPrefab;
+
 
     private void Awake()
     {

@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 9187229648715013400}
   - component: {fileID: 8046645595396253012}
   - component: {fileID: -7845833285926710947}
+  - component: {fileID: 4336920129520482269}
+  - component: {fileID: 9123490329958286773}
   m_Layer: 0
   m_Name: Bed
   m_TagString: Untagged
@@ -133,6 +135,31 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &4336920129520482269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6204321974143955404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 976e9cdb95804c67a23f1a2d187be4b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 2
+--- !u!114 &9123490329958286773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6204321974143955404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0edb32acbd1873f43a61e07072bc0e6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &6867561999520601587
 PrefabInstance:
   m_ObjectHideFlags: 0

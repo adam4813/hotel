@@ -16,12 +16,8 @@ public class QueueInLineStrategy : IActionStrategy
 
     public void Start()
     {
-        Debug.Log($"Trying to put {_agentGameObject.name} in queue.");
-        
         if (_queueableLine.IsInQueue(_agentGameObject) || _queueableLine.IsQueueFull) return;
 
         _queueableLine.AddToQueue(_agentGameObject);
-        
-        Debug.Log($"{_agentGameObject.name} is now in the queue.");
     }
 }

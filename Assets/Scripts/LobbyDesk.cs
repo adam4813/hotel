@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(QueueableLine))] 
-public class LobbyDesk : MonoBehaviour, IInteractable
+[RequireComponent(typeof(QueueableLine))]
+public class LobbyDesk : MonoBehaviour, IInteractable, IActionProvider
 {
     public string InteractionPrompt { get; }
     private QueueableLine _queueableLine;
@@ -28,5 +29,20 @@ public class LobbyDesk : MonoBehaviour, IInteractable
         }
 
         return true;
+    }
+
+
+    public HashSet<AgentAction> GetActions(GoapAgent agent, Dictionary<string, AgentBelief> beliefs)
+    {
+        var hasRoomKeyBelief = beliefs[GoapAgent.GetBeliefNameForItem("RoomKey")];
+        var queueBeliefName = GetComponent<QueueableLine>().QueueBeliefName;
+        return new HashSet<AgentAction>
+        {
+            new AgentAction.Builder($"WaitToBeCheckedInAt{name}")
+                .WithStrategy(new WaitForBeliefStrategy(hasRoomKeyBelief))
+                .AddPrecondition(beliefs[queueBeliefName])
+                .AddEffect(hasRoomKeyBelief)
+                .Build()
+        };
     }
 }
