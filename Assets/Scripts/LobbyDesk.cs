@@ -31,14 +31,13 @@ public class LobbyDesk : MonoBehaviour, IInteractable, IActionProvider
         return true;
     }
 
-
     public HashSet<AgentAction> GetActions(GoapAgent agent, Dictionary<string, AgentBelief> beliefs)
     {
         var hasRoomKeyBelief = beliefs[GoapAgent.GetBeliefNameForItem("RoomKey")];
         var queueBeliefName = GetComponent<QueueableLine>().QueueBeliefName;
         return new HashSet<AgentAction>
         {
-            new AgentAction.Builder($"WaitToBeCheckedInAt{name}")
+            new AgentAction.Builder($"WaitToBeCheckedInAt{name}Desk{GetInstanceID()}")
                 .WithStrategy(new WaitForBeliefStrategy(hasRoomKeyBelief))
                 .AddPrecondition(beliefs[queueBeliefName])
                 .AddEffect(hasRoomKeyBelief)

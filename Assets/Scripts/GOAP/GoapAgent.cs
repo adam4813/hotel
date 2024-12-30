@@ -15,7 +15,9 @@ public class GoapAgent : MonoBehaviour
     private Rigidbody _rigidbody;
 
     [Header("Stats")] public float Health = 100f;
+    [SerializeField] public LocationActionProvider bedLocation;
     public float Stamina = 100f;
+    [SerializeField] public LocationActionProvider lobbyDeskLocation;
 
     public List<string> Inventory = new();
 
@@ -71,11 +73,12 @@ public class GoapAgent : MonoBehaviour
     {
         var actionProviders = new List<IActionProvider>();
         dynamicLocations.ForEach(location =>
-            actionProviders.AddRange(location.GetComponents<Component>().OfType<IActionProvider>()));
+            actionProviders.AddRange(location.GetComponentsInChildren<Component>().OfType<IActionProvider>()));
 
+        var beliefFactory = new BeliefFactory(this, Beliefs);
         foreach (var actionProvider in actionProviders)
         {
-            actionProvider.GetBeliefs(this).ToList().ForEach(belief => Beliefs[belief.Key] = belief.Value);
+            actionProvider.AddBeliefs(beliefFactory);
         }
 
         foreach (var actionProvider in actionProviders)
@@ -161,9 +164,9 @@ public class GoapAgent : MonoBehaviour
 
     private void UpdateStats()
     {
-        Stamina += Beliefs["AgentAtBedLocation"].Evaluate() ? 20 : -10;
+        Stamina += Beliefs[bedLocation.LocationBeliefName].Evaluate() ? 20 : -10;
         Stamina = Mathf.Clamp(Stamina, 0, 100);
-        Health += Beliefs["AgentAtLobbyDeskLocation"].Evaluate() ? 10 : -5;
+        Health += Beliefs[lobbyDeskLocation.LocationBeliefName].Evaluate() ? 10 : -5;
         Health = Mathf.Clamp(Health, 0, 100);
     }
 

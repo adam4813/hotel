@@ -4,21 +4,20 @@ using UnityEngine;
 public class LocationActionProvider : MonoBehaviour, IActionProvider
 {
     [SerializeField] private float radius;
-    public string LocationBeliefName => $"AgentAt{name}Location";
 
-    public Dictionary<string, AgentBelief> GetBeliefs(GoapAgent agent)
+    private string UniqueName => $"{name}Location{GetInstanceID()}";
+    public string LocationBeliefName => $"AgentAt{UniqueName}";
+
+    public void AddBeliefs(BeliefFactory factory)
     {
-        var beliefs = new Dictionary<string, AgentBelief>();
-        var beliefFactory = new BeliefFactory(agent, beliefs);
-        beliefFactory.AddLocationBelief(LocationBeliefName, radius, transform);
-        return beliefs;
+        factory.AddLocationBelief(LocationBeliefName, radius, transform.position);
     }
-    
+
     public HashSet<AgentAction> GetActions(GoapAgent agent, Dictionary<string, AgentBelief> beliefs)
     {
         return new HashSet<AgentAction>
         {
-            new AgentAction.Builder($"MoveTo{name}")
+            new AgentAction.Builder($"MoveTo{UniqueName}")
                 .WithStrategy(new MoveStrategy(agent.NavMeshAgent, () => transform.position))
                 .AddEffect(beliefs[LocationBeliefName])
                 .Build()

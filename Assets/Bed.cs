@@ -9,7 +9,7 @@ public class Bed : MonoBehaviour, IActionProvider
         var locationBeliefName = GetComponent<LocationActionProvider>().LocationBeliefName;
         return new HashSet<AgentAction>
         {
-            new AgentAction.Builder("Rest")
+            new AgentAction.Builder($"RestAt{name}Restorer{GetInstanceID()}")
                 .WithStrategy(new IdleStrategy(4))
                 .AddPrecondition(beliefs[locationBeliefName])
                 .AddEffect(beliefs["AgentIsRested"])

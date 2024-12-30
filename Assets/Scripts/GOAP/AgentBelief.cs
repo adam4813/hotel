@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class BeliefFactory
 {
-    private readonly GoapAgent _agent;
+    public GoapAgent Agent { get; }
+
     private readonly Dictionary<string, AgentBelief> _beliefs;
 
     public BeliefFactory(GoapAgent agent, Dictionary<string, AgentBelief> beliefs)
     {
-        _agent = agent;
+        Agent = agent;
         _beliefs = beliefs;
     }
 
@@ -28,17 +29,17 @@ public class BeliefFactory
             .Build();
     }
 
-    public void AddLocationBelief(string key, float distance, Transform locationCondition)
+    public void AddLocationBelief(string key, float distance, Vector3 position)
     {
         _beliefs[key] = new AgentBelief.Builder(key)
-            .WithCondition(() => InRangeOf(locationCondition.position, distance))
-            .WithLocation(() => locationCondition.position)
+            .WithCondition(() => InRangeOf(position, distance))
+            .WithLocation(() => position)
             .Build();
     }
 
     private bool InRangeOf(Vector3 position, float distance)
     {
-        return Vector3.Distance(_agent.transform.position, position) < distance;
+        return Vector3.Distance(Agent.transform.position, position) < distance;
     }
 }
 

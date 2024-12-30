@@ -78,7 +78,27 @@ public class GoapInspector : EditorWindow
             EditorGUI.indentLevel++;
             foreach (var action in agent.Actions)
             {
-                EditorGUILayout.LabelField(action.Name);
+                _foldouts[action.Name] = EditorGUILayout.Foldout(_foldouts.GetValueOrDefault(action.Name, false), action.Name);
+
+                if (!_foldouts[action.Name]) continue;
+
+                GUI.enabled = false;
+                EditorGUILayout.LabelField("Preconditions");
+                EditorGUI.indentLevel++;
+                foreach (var precondition in action.Preconditions)
+                {
+                    EditorGUILayout.ToggleLeft(precondition.Name, precondition.Evaluate());
+                }
+                EditorGUI.indentLevel--;
+
+                EditorGUILayout.LabelField("Effects");;
+                EditorGUI.indentLevel++;
+                foreach (var effect in action.Effects)
+                {
+                    EditorGUILayout.ToggleLeft(effect.Name, effect.Evaluate());
+                }
+                EditorGUI.indentLevel--;
+                GUI.enabled = true;
             }
 
             EditorGUI.indentLevel--;

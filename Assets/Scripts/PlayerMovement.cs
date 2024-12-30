@@ -27,5 +27,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(velocity), rotationSpeed * Time.deltaTime);
         }
+
+        transform.position = new Vector3(transform.position.x, 0, transform.position.z);
     }
 }

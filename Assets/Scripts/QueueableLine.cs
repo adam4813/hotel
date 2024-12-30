@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(LocationActionProvider))]
 public class QueueableLine : MonoBehaviour, IActionProvider
 {
     [SerializeField] private int maxQueueSize;
+    [SerializeField] private LocationActionProvider queueExit;
     private readonly Queue<GameObject> _queue = new();
     public bool IsQueueFull => _queue.Count >= maxQueueSize;
 
@@ -22,22 +22,20 @@ public class QueueableLine : MonoBehaviour, IActionProvider
         return _queue.Count == 0 ? null : _queue.Dequeue();
     }
     
-    public string QueueBeliefName => $"AgentIn{name}Queue";
+    private string UniqueName => $"{name}Queue{GetInstanceID()}";
+    public string QueueBeliefName => $"AgentIn{UniqueName}";
 
-    public Dictionary<string, AgentBelief> GetBeliefs(GoapAgent agent)
+    public void AddBeliefs(BeliefFactory factory)
     {
-        var beliefs = new Dictionary<string, AgentBelief>();
-        var beliefFactory = new BeliefFactory(agent, beliefs);
-        beliefFactory.AddBelief(QueueBeliefName, () => IsInQueue(agent.gameObject));
-        return beliefs;
+        factory.AddBelief(QueueBeliefName,() => IsInQueue(factory.Agent.gameObject));
     }
 
     public HashSet<AgentAction> GetActions(GoapAgent agent, Dictionary<string, AgentBelief> beliefs)
     {
-        var locationBeliefName = GetComponent<LocationActionProvider>().LocationBeliefName;
+        var locationBeliefName = queueExit.LocationBeliefName;
         return new HashSet<AgentAction>
         {
-            new AgentAction.Builder($"GetIn{name}Queue")
+            new AgentAction.Builder($"GetIn{UniqueName}")
                 .WithStrategy(new QueueInLineStrategy(this, agent.gameObject))
                 .AddPrecondition(beliefs[locationBeliefName])
                 .AddEffect(beliefs[QueueBeliefName])

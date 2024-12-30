@@ -2,9 +2,8 @@
 
 public interface IActionProvider
 {
-    public Dictionary<string, AgentBelief> GetBeliefs(GoapAgent agent)
+    public void AddBeliefs(BeliefFactory factory)
     {
-        return new Dictionary<string, AgentBelief>();
     }
 
     public HashSet<AgentAction> GetActions(GoapAgent agent, Dictionary<string, AgentBelief> beliefs);
