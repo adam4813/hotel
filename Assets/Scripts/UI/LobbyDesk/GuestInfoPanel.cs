@@ -9,15 +9,16 @@ public class GuestInfoPanel : MonoBehaviour
     [SerializeField] private StatDisplay nightStatDisplay;
     [SerializeField] private StatDisplay totalCostStatDisplay;
     [SerializeField] private Button checkInButton;
+    public Button CheckInButton => checkInButton;
 
     private void Awake()
     {
-        checkInButton.onClick.AddListener(() => gameObject.SetActive(false));
         gameObject.SetActive(false);
     }
 
-    public void SetStayInfo(StayInfo stayInfo)
+    public void SetGuest(GoapAgent guest)
     {
+        var stayInfo = guest.StayInfo;
         guestNameText.text = stayInfo.GuestInfo.GuestName;
         rateStatDisplay.SetStatValue(stayInfo.Rate);
         nightStatDisplay.SetStatValue(stayInfo.Nights);

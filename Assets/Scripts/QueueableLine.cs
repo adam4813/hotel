@@ -1,27 +1,34 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class QueueableLine : MonoBehaviour, IActionProvider
 {
     [SerializeField] private int maxQueueSize;
     [SerializeField] private LocationActionProvider queueExit;
-    private readonly Queue<GameObject> _queue = new();
-    public bool IsQueueFull => _queue.Count >= maxQueueSize;
-
-    public bool IsInQueue(GameObject agent) => _queue.Contains(agent);
+    private readonly List<GameObject> queueList = new();
+    public List<GameObject> GetQueue() => queueList;
+    public bool IsQueueFull => queueList.Count >= maxQueueSize;
+    public bool IsQueueEmpty => queueList.Count == 0;
+    public bool IsInQueue(GameObject agent) => queueList.Contains(agent);
 
     public bool AddToQueue(GameObject agent)
     {
-        if (_queue.Count >= maxQueueSize) return false;
-        _queue.Enqueue(agent);
+        if (queueList.Count >= maxQueueSize) return false;
+        queueList.Add(agent);
         return true;
     }
-    
+
+    public void RemoveFromQueue(GameObject go)
+    {
+        queueList.Remove(go);
+    }
+
     public GameObject GetNextInQueue()
     {
-        return _queue.Count == 0 ? null : _queue.Dequeue();
+        return queueList.Count == 0 ? null : queueList.First();
     }
-    
+
     private string UniqueName => $"{name}Queue{GetInstanceID()}";
     public string QueueBeliefName => $"AgentIn{UniqueName}";
 

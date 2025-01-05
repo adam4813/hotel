@@ -9,6 +9,8 @@ public class GoapAgent : MonoBehaviour
     private readonly List<GoapSensor> _sensors = new();
 
     [SerializeField] private List<GameObject> dynamicLocations;
+    [SerializeField] private StayInfo stayInfo;
+    public StayInfo StayInfo => stayInfo;
 
     public NavMeshAgent NavMeshAgent { get; private set; }
 

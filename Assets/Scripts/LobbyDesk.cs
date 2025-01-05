@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(QueueableLine))]
 public class LobbyDesk : MonoBehaviour, IInteractable, IActionProvider
 {
+    [SerializeField] private LobbyDeskPanel lobbyDeskPanel;
     public string InteractionPrompt { get; }
     private QueueableLine _queueableLine;
 
@@ -12,21 +13,38 @@ public class LobbyDesk : MonoBehaviour, IInteractable, IActionProvider
         _queueableLine = GetComponent<QueueableLine>();
     }
 
+    private void OnEnable()
+    {
+        LobbyDeskPanel.OnGuestCheckedIn += OnGuestCheckedIn;
+    }
+
+    private void OnDisable()
+    {
+        LobbyDeskPanel.OnGuestCheckedIn -= OnGuestCheckedIn;
+    }
+
+    private void OnGuestCheckedIn(GoapAgent guest)
+    {
+        if (!_queueableLine.IsInQueue(guest.gameObject)) return;
+        _queueableLine.RemoveFromQueue(guest.gameObject);
+        guest.AddItemToInventory("RoomKey");
+    }
+
     public bool OnInteract(Interactor interactor)
     {
-        var guestInQueue = _queueableLine.GetNextInQueue();
-        if (guestInQueue != null)
-        {
-            Debug.Log($"Interacting with the {guestInQueue.name} in the queue");
-            if (guestInQueue.TryGetComponent(out GoapAgent agent))
-            {
-                agent.AddItemToInventory("RoomKey");
-            }
-        }
-        else
+        if (_queueableLine.IsQueueEmpty)
         {
             Debug.Log("No one in the queue");
+            return false;
         }
+
+        _queueableLine.GetQueue().ForEach(guest =>
+        {
+            if (!guest.TryGetComponent(out GoapAgent agent)) return;
+            lobbyDeskPanel.AddGuest(agent);
+        });
+
+        lobbyDeskPanel.gameObject.SetActive(true);
 
         return true;
     }
