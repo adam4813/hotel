@@ -8,8 +8,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private MouseDragPrefab mouseDragPrefab;
     [SerializeField] private GameObject roomPrefab;
     [SerializeField] private List<ItemScriptableObject> items;
+    [SerializeField] private List<HotelRoom> hotelRooms;
+
     public List<GoapAgent> Agents { get; } = new();
     public List<ItemScriptableObject> Items => items;
+    public List<HotelRoom> Rooms => hotelRooms;
 
     public MouseDragPrefab MouseDragPrefab => mouseDragPrefab;
     public GameObject ActivePrefab => roomPrefab;
@@ -34,7 +37,7 @@ public class GameManager : MonoBehaviour
             MouseDragPrefab.SetPrefab(roomPrefab);
         }
     }
-    
+
     public void AddAgent(GoapAgent agent)
     {
         Agents.Add(agent);

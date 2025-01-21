@@ -48,3 +48,5 @@ MonoBehaviour:
   roomPrefab: {fileID: 957546511247982452, guid: 8bf9257f414b48747b1730d922307248, type: 3}
   items:
   - {fileID: 11400000, guid: 82df685214a1cae4bab8730ac0d1e09f, type: 2}
+  hotelRooms:
+  - {fileID: 0}
